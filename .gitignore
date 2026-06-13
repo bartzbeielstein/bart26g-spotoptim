@@ -16,3 +16,6 @@ __pycache__/
 # OS
 .DS_Store
 /CLAUDE.md
+
+# TensorBoard logs (created by the logging example during render)
+/runs/
