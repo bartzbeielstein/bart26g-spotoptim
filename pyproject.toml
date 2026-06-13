@@ -1,0 +1,26 @@
+[project]
+name = "bart26g-spotoptim"
+version = "0.0.1"
+description = "Manuscript: Optimization with SpotOptim"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "jupyter>=1.1.1",
+    "jupyter-cache>=1.0.1",
+    "matplotlib>=3.10.7",
+    "plotly>=6.5.0",
+    "spotoptim[torch]>=1.0.2",
+    "spotdesirability>=0.1.1",
+    "torch>=2.9.1",
+]
+
+# PyTorch CPU-only index. spotoptim's `torch` extra requires torch, but
+# `[tool.uv.sources]` does not propagate from a PyPI dependency, so the
+# CPU index is declared here to avoid pulling CUDA wheels.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
