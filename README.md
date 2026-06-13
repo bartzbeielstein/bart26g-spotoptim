@@ -18,17 +18,21 @@ torch is resolved from the CPU-only PyTorch index configured in `pyproject.toml`
 uv sync                       # create the environment from uv.lock
 ```
 
-The notebook front matter selects a Jupyter kernel named `spotoptim`. Register it
-against the project environment once:
-
-```bash
-uv run python -m ipykernel install --user --name spotoptim --display-name spotoptim
-```
-
 ## Render
 
+The document uses the standard `python3` Jupyter kernel, so Quarto must run
+against the project environment (a bare `quarto` call picks up the system Python,
+which has no Jupyter). Either run Quarto through `uv`:
+
 ```bash
-uv run quarto render index.qmd
+uv run quarto render index.qmd       # or: uv run quarto preview index.qmd
+```
+
+or point Quarto at the venv interpreter via `QUARTO_PYTHON`:
+
+```bash
+export QUARTO_PYTHON="$PWD/.venv/bin/python3"
+quarto render index.qmd
 ```
 
 The arXiv submission bundle is in `arxiv_submission/` (and `spotoptim_arxiv.zip`).

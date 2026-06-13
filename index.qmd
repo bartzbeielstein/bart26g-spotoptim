@@ -14,7 +14,7 @@ abstract: |
     The `spotoptim` package implements surrogate-model-based optimization of expensive black-box functions in Python. Building on two decades of Sequential Parameter Optimization (SPO) methodology, it provides a Kriging-based optimization loop with Expected Improvement, support for continuous, integer, and categorical variables, noise-aware evaluation via Optimal Computing Budget Allocation (OCBA), and multi-objective extensions. A success-rate-based restart mechanism detects stagnation while preserving the best solution found. The package returns scipy-compatible `OptimizeResult` objects and accepts any scikit-learn-compatible surrogate model. Built-in TensorBoard logging provides real-time monitoring of convergence and surrogate quality. This report describes the architecture and module structure of spotoptim, provides worked examples including neural network hyperparameter tuning, and compares the framework with BoTorch, Optuna, Ray Tune, BOHB, SMAC, and Hyperopt. The package is open-source (AGPL-3.0).
 
     \textbf{Keywords:} Surrogate modeling, Sequential parameter optimization, Bayesian optimization, Hyperparameter tuning, Kriging
-jupyter: spotoptim
+jupyter: python3
 echo: true
 header-includes: |
   \usepackage{dirtree}
