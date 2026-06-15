@@ -282,8 +282,10 @@ Several boundary cases follow directly from this logic. Setting `max_restarts=No
 
 The `spotoptim` codebase is organized into focused modules (subpackages),
 each responsible for a specific aspect of the optimization workflow.
-Figure~\ref{fig-dirtree} shows the top-level directory structure.
-This section describes each module, its purpose, and its key components. Key abbreviations used in the figure and throughout this section include multi-layer perceptron (MLP) and principal component analysis (PCA). All modules are imported from the top-level `spotoptim` namespace or from the corresponding subpackage.
+Figure \ref{fig-dirtree} shows the top-level directory structure.
+This section describes each module, its purpose, and its key components. Key abbreviations used in the figure and throughout this section include multi-layer perceptron (MLP) and principal component analysis (PCA).
+
+The base installation, obtained with `pip install spotoptim` and requiring Python 3.13 or later, is deliberately lean: it depends only on NumPy, SciPy, scikit-learn, pandas, tabulate, and dill, which suffices for the core Kriging optimization loop, the analytical test functions, and the reporting utilities. Capabilities that rely on heavier dependencies are provided as optional extras. The `torch` extra adds the neural network surrogates, the PyTorch objective and dataset utilities of the `nn` and `data` subpackages, and TensorBoard logging; the `viz` extra adds the Matplotlib- and seaborn-based figures of the `plot`, `inspection`, `eda`, and multi-objective modules; the `stats` extra adds statsmodels-based statistical utilities; and the `remote` extra adds requests-based remote objective evaluation. The bundle `spotoptim[all]` installs all four, and the neural network and visualization examples in this report assume at least the `torch` and `viz` extras. Consistent with this lean design, only `SpotOptim`, `Kriging`, `SimpleKriging`, and a few core helpers are re-exported from the top-level `spotoptim` namespace; all other components are imported from their respective subpackages, as the examples below illustrate.
 
 ```{=latex}
 \begin{figure*}[ht]
@@ -302,6 +304,7 @@ This section describes each module, its purpose, and its key components. Key abb
 .2 mo/\DTcomment{Multi-objective: Morris--Mitchell, Pareto front}.
 .2 hyperparameters/\DTcomment{Parameter set management for neural network tuning}.
 .2 data/\DTcomment{Dataset loaders (e.g., DiabetesDataset)}.
+.2 datasets/\DTcomment{Bundled CSV datasets}.
 .2 inspection/\DTcomment{Model/surrogate inspection}.
 .2 factor\_analyzer/\DTcomment{Factor analysis}.
 .2 eda/\DTcomment{Exploratory data analysis}.
@@ -390,14 +393,14 @@ print(f"Best value: {result.fun:.6f}")
 
 The `optimizer` subpackage implements the acquisition functions, their optimizers as well as infill-point selection.
 
-**Acquisition functions.** The `acquisition_function` parameter selects which criterion is used to propose the next evaluation point. Three options are available.
+The `acquisition` parameter selects which criterion is used to propose the next evaluation point. Three options are available.
 *Predicted value* (`"y"`) selects the point where the surrogate predicts the lowest (or highest, for maximization) objective value. This is the simplest strategy and amounts to pure exploitation of the current model. It is computationally cheap but can become trapped in local minima because it does not account for surrogate uncertainty.
 *Expected Improvement* (`"ei"`) balances exploitation and exploration by weighting the predicted improvement over the current best value $y_{\min}$ against the surrogate's predictive uncertainty $\sigma(\mathbf{x})$. The EI formula (@eq-ei) was introduced in @sec-examples; points with high predicted quality *or* high uncertainty receive large EI values, which encourages the optimizer to explore under-sampled regions.
 *Probability of Improvement* (`"pi"`) selects the point with the highest probability of producing an objective value below the current best $y_{\min}$. Probability of Improvement tends to be more exploitative than EI, because it only measures the probability of any improvement, not its expected magnitude.
 
-**Acquisition optimizers.** The `acquisition_optimizer` parameter determines how the acquisition function is maximized over the search space. Differential evolution (the default) performs a global search and is robust across a wide range of problem structures [@Stor96a]. The triangulation candidates approach implements the approach developed by @gram22a, generating candidate points geometrically from the Delaunay triangulation of existing evaluations, producing both interior candidates at simplex centroids and fringe candidates that extend toward the search space boundary, see also @sec-tricands. The hybrid `de_tricands` mode, which is still experimental and has not been analyzed so far, alternates between the two methods with probability controlled by `prob_de_tricands`. Standard scipy minimizers are also supported for local refinement.
+The `acquisition_optimizer` parameter determines how the acquisition function is maximized over the search space. Differential evolution (the default) performs a global search and is robust across a wide range of problem structures [@Stor96a]. The triangulation candidates approach implements the approach developed by @gram22a, generating candidate points geometrically from the Delaunay triangulation of existing evaluations, producing both interior candidates at simplex centroids and fringe candidates that extend toward the search space boundary, see also @sec-tricands. The hybrid `de_tricands` mode, which is still experimental and has not been analyzed so far, alternates between the two methods with probability controlled by `prob_de_tricands`. Standard scipy minimizers are also supported for local refinement.
 
-**Infill points.** Multiple infill points can be proposed per iteration by setting `n_infill_points`; the candidates are evaluated sequentially before the surrogate is refitted, which reduces the number of surrogate refits over a run. When the acquisition optimizer fails to find a valid new point (for example due to a flat surrogate surface), a random fallback point is generated within bounds. 
+Multiple infill points can be proposed per iteration by setting `n_infill_points`; the candidates are evaluated sequentially before the surrogate is refitted, which reduces the number of surrogate refits over a run. When the acquisition optimizer fails to find a valid new point (for example due to a flat surrogate surface), a random fallback point is generated within bounds. 
 For problems with many evaluation points, the `max_surrogate_points` parameter limits the number of data points used for surrogate fitting, keeping computational cost manageable as the number of evaluations grows. Points are selected using K-means clustering with either a space-filling criterion (`"distant"`) or a quality-based criterion (`"best"`).
 
 ## Neural Network Models {#sec-nn}
@@ -587,8 +590,8 @@ Different weight vectors trace different regions of the Pareto front. For more s
 The `hyperparameters` subpackage provides the `ParameterSet` class, a fluent API for defining search spaces with typed variables. Parameters are added through chained calls to `add_float()`, `add_int()`, and `add_factor()`, each specifying a name, bounds, default value, and optional transformation.
 
 ```python
-from spotoptim.hyperparameters.parameters (
-    import ParameterSet)
+from spotoptim.hyperparameters \
+    .parameters import ParameterSet
 
 ps = ParameterSet()
 ps.add_float(
